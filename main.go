@@ -15,7 +15,7 @@ func main() {
 	}
 	defer objs.Close()
 
-	ifname := "lo"
+	ifname := "enp2s0"
 	iface, err := net.InterfaceByName(ifname)
 	if err != nil {
 		panic(err)
