@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 )
 
@@ -21,10 +22,12 @@ func main() {
 		panic(err)
 	}
 
-	link, err := link.AttachXDP(link.XDPOptions{
-		Program:   objs.XdpNetblockerFunc,
+	link, err := link.AttachTCX(link.TCXOptions{
 		Interface: iface.Index,
+		Program:   objs.SockfilterNetblockerFunc,
+		Attach:    ebpf.AttachType(ebpf.AttachTCXEgress),
 	})
+
 	if err != nil {
 		panic(err)
 	}

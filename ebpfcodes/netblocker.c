@@ -1,9 +1,12 @@
 //go:build ignore
-
-#include<linux/bpf.h>
-#include<bpf/bpf_helpers.h>
+#include <linux/bpf.h>
+#include <bpf/bpf_helpers.h>
+#include <linux/pkt_cls.h>
 #include <linux/if_ether.h>
 #include <linux/ip.h>
+#include <linux/udp.h>
+#include <linux/tcp.h>
+// #include <linux/in.h>
 #include <linux/if_vlan.h>
 #include <arpa/inet.h>
 
@@ -21,19 +24,20 @@ struct vlan_hdr {
 __u64 parse_eth(void *data, void *data_end);
 __u64 parse_ip(void *data, void *data_end, __u64 offset);
 
-SEC("xdp")
-int xdp_netblocker_func(struct xdp_md *ctx) {
-    void *data = (void *)(long)(ctx->data);
-    void *data_end = (void *)(long)(ctx->data_end);
+SEC("tcx/action")
+int sockfilter_netblocker_func(struct __sk_buff *skb) {
+    void *data_end = (void *)(long)skb->data_end;
+    void *data = (void *)(long)skb->data;
     __u64 offset = 0;
 
     offset = parse_eth(data, data_end);
-    if(offset == -1) return XDP_PASS;
+    if(offset == -1) return TCX_NEXT;
     
     offset = parse_ip(data, data_end, offset);
-    if(offset == -1) return XDP_PASS;
+    if(offset == -1) return TCX_NEXT;
 
-    return XDP_PASS;
+
+    return TCX_NEXT;
 }
 
 char _license[] SEC("license") = "Dual MIT/GPL";
@@ -71,7 +75,10 @@ __u64 parse_ip(void *data, void *data_end, __u64 offset) {
     if ((void *)iph + sizeof(*iph) > data_end) {
         return -1;
     }
+    if(iph->protocol != IPPROTO_UDP) {
+        return -1;
+    }
     offset += sizeof(iph);
-    bpf_printk("%u.%u.%u.%u\n", (iph->saddr >> 24) & 0xFF, (iph->saddr >> 16) & 0xFF, (iph->saddr >> 8) & 0xFF, iph->saddr & 0xFF);
+    // bpf_printk("%u.%u.%u.%u\n", (iph->saddr >> 24) & 0xFF, (iph->saddr >> 16) & 0xFF, (iph->saddr >> 8) & 0xFF, iph->saddr & 0xFF);
     return offset;
 }
