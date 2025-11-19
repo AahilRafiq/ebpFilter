@@ -47,16 +47,17 @@ __u64 parse_eth(void *data, void *data_end) {
     struct ethhdr *eth = data;
     __u64 offset = sizeof(*eth);
 
-    if((void*)data + sizeof(*eth) > data_end) {
+    if((void*)data + sizeof(struct ethhdr) > data_end) {
         return -1;
     }
     __u16 ethtype = eth->h_proto;
 
+    // Todo: is this really needed?
     // handle VLAN tagged packet
     if(ntohs(ethtype) == ETH_P_8021Q || ntohs(ethtype) == ETH_P_8021AD) {
         struct vlan_hdr *vlan_hdr = data + offset;
         offset += sizeof(*vlan_hdr);
-        if ((void *)vlan_hdr + sizeof(*vlan_hdr) > data_end) {
+        if ((void *)vlan_hdr + sizeof(struct vlan_hdr) > data_end) {
             return XDP_ABORTED;
         }
         ethtype = vlan_hdr->h_vlan_encapsulated_proto;
@@ -72,7 +73,7 @@ __u64 parse_eth(void *data, void *data_end) {
 
 __u64 parse_ip(void *data, void *data_end, __u64 offset) {
     struct iphdr *iph = data + offset;
-    if ((void *)iph + sizeof(*iph) > data_end) {
+    if ((void *)iph + sizeof(struct iphdr) > data_end) {
         return -1;
     }
     if(iph->protocol != IPPROTO_UDP) {
@@ -82,3 +83,8 @@ __u64 parse_ip(void *data, void *data_end, __u64 offset) {
     // bpf_printk("%u.%u.%u.%u\n", (iph->saddr >> 24) & 0xFF, (iph->saddr >> 16) & 0xFF, (iph->saddr >> 8) & 0xFF, iph->saddr & 0xFF);
     return offset;
 }
+
+// __u64 parse_udp(void *data, void *data_end, __u64 offset) {
+//     struct udphdr *udph = data + offset;
+//     if((void *)udph + sizeof(struct udphdr))
+// }
