@@ -9,6 +9,8 @@
         "if_vlan.h": "c",
         "inet.h": "c",
         "ip.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "stdbool.h": "c",
+        "net_parsers.h": "c"
     }
 }

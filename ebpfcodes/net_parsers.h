@@ -42,6 +42,7 @@ __u64 parse_eth(void *data, void *data_end) {
 
     // Only handling IPV4
     if(ntohs(ethtype) != ETH_P_IP) {
+        bpf_printk("ipv6");
         return -1;
     }
 
