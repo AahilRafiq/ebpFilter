@@ -7,6 +7,8 @@
         "pkt_cls.h": "c",
         "in.h": "c",
         "if_vlan.h": "c",
-        "inet.h": "c"
+        "inet.h": "c",
+        "ip.h": "c",
+        "types.h": "c"
     }
 }
