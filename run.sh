@@ -10,4 +10,4 @@ go generate
 go build
 
 # Update ifname here
-sudo ./ebpfocus wlo1
+sudo ./ebpfocus enp2s0
