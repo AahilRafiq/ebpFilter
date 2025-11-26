@@ -4,6 +4,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
@@ -15,6 +16,20 @@ func main() {
 		panic(err)
 	}
 	defer objs.Close()
+
+	var blockedList = []string{
+		"example.com",
+		"youtube.com",
+	}
+
+	var tmp int32 = 0
+	dnsMap := objs.netblockerMaps.Blockeddns
+	for _, domain := range blockedList {
+		err := dnsMap.Put(domainNameToKey(domain), tmp)
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	ifname := "enp2s0"
 	iface, err := net.InterfaceByName(ifname)
@@ -36,4 +51,18 @@ func main() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	<-stop
+}
+
+func domainNameToKey(name string) [256]byte {
+	var bytes [256]byte
+
+	i := 0
+	for _, label := range strings.Split(name, ".") {
+		bytes[i] = byte(len(label))
+		i++
+		copy(bytes[i:], []byte(label))
+		i += len(label)
+	}
+
+	return bytes
 }

@@ -28,6 +28,13 @@ int __strcmp(const char *s1, const char *s2, int len) {
     return 0;
 }
 
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(key_size, 256);
+    __type(value, int);
+    __uint(max_entries, 200); // adjust later
+} blockeddns SEC(".maps");
+
 SEC("tcx/action")
 int sockfilter_netblocker_func(struct __sk_buff *skb) {
     void *data_end = (void *)(long)skb->data_end;
@@ -52,7 +59,7 @@ int sockfilter_netblocker_func(struct __sk_buff *skb) {
     offset += sizeof(struct dns_hdr);
 
     char *query = (char*)(data + offset);
-    char dexample[] = "_youtube_com";
+    char dexample[] = "_example_com";
     dexample[0] = 7;
     dexample[8] = 3;
     if((void*)query + 13 > data_end) {
