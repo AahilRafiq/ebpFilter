@@ -1,1 +1,1 @@
-wlo1,example.com,youtube.com,instagram.com
+youtube.com,instagram.com,eraser.io

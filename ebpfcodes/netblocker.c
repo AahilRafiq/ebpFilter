@@ -17,17 +17,6 @@ struct dns_hdr{
     __u16 arcount;
 };
 
-int __strcmp(const char *s1, const char *s2, int len) {
-    int index = 0;
-    while(index < len && s1[index] != '\0') {
-        if(s1[index] != s2[index]) {
-            return -1;
-        }
-        index++;
-    }
-    return 0;
-}
-
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
     __uint(key_size, 256);
