@@ -20,12 +20,12 @@ func main() {
 	var blockedList = []string{
 		"example.com",
 		"youtube.com",
+		"eraser.io",
 	}
 
-	var tmp int32 = 0
 	dnsMap := objs.netblockerMaps.Blockeddns
 	for _, domain := range blockedList {
-		err := dnsMap.Put(domainNameToKey(domain), tmp)
+		err := dnsMap.Put(domainNameToKey(domain), int32(1))
 		if err != nil {
 			panic(err)
 		}

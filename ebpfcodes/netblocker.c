@@ -58,15 +58,19 @@ int sockfilter_netblocker_func(struct __sk_buff *skb) {
     __u16 num_queries = ntohs(dnsh->qdcount);
     offset += sizeof(struct dns_hdr);
 
-    char *query = (char*)(data + offset);
-    char dexample[] = "_example_com";
-    dexample[0] = 7;
-    dexample[8] = 3;
-    if((void*)query + 13 > data_end) {
-        return TCX_NEXT;
+    char query[256] = {0};
+    char *dns_data = (char*)(data + offset);
+    int idx=0;
+    while(idx < 256 && (void*)dns_data + idx < data_end) {
+        if(dns_data[idx] == 0) break;
+
+        query[idx] = (char)dns_data[idx];
+        idx++;
     }
-    if(__strcmp(query, dexample, 13) == 0) {
-        bpf_printk("dropping %s",dexample);
+
+    void *val = bpf_map_lookup_elem(&blockeddns, (void*)query);
+    if(val != NULL) {
+        bpf_printk("Dropping %s", query);
         return TCX_DROP;
     }
 
