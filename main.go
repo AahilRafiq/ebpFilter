@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -11,17 +12,22 @@ import (
 )
 
 func main() {
+	args := os.Args[1:]
+	ifname := args[0]
+	fmt.Printf("Starting dns blocker on %s\n", ifname)
+
 	var objs netblockerObjects
 	if err := loadNetblockerObjects(&objs, nil); err != nil {
 		panic(err)
 	}
 	defer objs.Close()
 
-	var blockedList = []string{
-		"example.com",
-		"youtube.com",
-		"eraser.io",
+	filebytes, err := os.ReadFile("dnslist.txt")
+	if err != nil {
+		panic(err)
 	}
+
+	blockedList := strings.Split(string(filebytes), ",")
 
 	dnsMap := objs.netblockerMaps.Blockeddns
 	for _, domain := range blockedList {
@@ -31,7 +37,6 @@ func main() {
 		}
 	}
 
-	ifname := "enp2s0"
 	iface, err := net.InterfaceByName(ifname)
 	if err != nil {
 		panic(err)
