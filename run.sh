@@ -9,4 +9,5 @@ resolvectl flush-caches
 go generate
 go build
 
+# Update ifname here
 sudo ./ebpfocus wlo1
