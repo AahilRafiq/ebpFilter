@@ -30,13 +30,9 @@ int sockfilter_netblocker_func(struct __sk_buff *skb) {
     void *data = (void *)(long)skb->data;
     __u64 offset = 0;
     
-    offset = parse_eth(data, data_end);
-    if(offset == -1) {
-        bpf_printk("returning here");
-        return TCX_NEXT;
-    }
-    offset = parse_ip(data, data_end, offset);
+    offset = parse_eth_and_ip(data, data_end);
     if(offset == -1) return TCX_NEXT;
+    
     offset = parse_udp(data, data_end, offset);
     if(offset == -1) return TCX_NEXT;
 

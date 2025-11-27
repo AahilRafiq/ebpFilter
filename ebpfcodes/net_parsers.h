@@ -7,7 +7,7 @@
 #include <linux/ip.h>
 #include <linux/udp.h>
 #include <arpa/inet.h>
-
+#include <linux/ipv6.h>
 
 /*
  * Copied from - https://docs.huihoo.com/doxygen/linux/kernel/3.7/linux_2if__vlan_8h_source.html
@@ -20,35 +20,6 @@ struct vlan_hdr {
     __be16  h_vlan_encapsulated_proto;
 };
 
-__u64 parse_eth(void *data, void *data_end) {
-    struct ethhdr *eth = (struct ethhdr*)data;
-    __u64 offset = sizeof(*eth);
-
-    if((void*)data + sizeof(struct ethhdr) > data_end) {
-        return -1;
-    }
-    __u16 ethtype = eth->h_proto;
-
-    // Todo: is this really needed?
-    // handle VLAN tagged packet
-    if(ntohs(ethtype) == ETH_P_8021Q || ntohs(ethtype) == ETH_P_8021AD) {
-        struct vlan_hdr *vlanh = (struct vlan_hdr*)(data + offset);
-        offset += sizeof(*vlanh);
-        if ((void *)vlanh + sizeof(struct vlan_hdr) > data_end) {
-            return XDP_ABORTED;
-        }
-        ethtype = vlanh->h_vlan_encapsulated_proto;
-    }
-
-    // Only handling IPV4
-    if(ntohs(ethtype) != ETH_P_IP) {
-        bpf_printk("ipv6");
-        return -1;
-    }
-
-    return offset;
-}
-
 __u64 parse_ip(void *data, void *data_end, __u64 offset) {
     struct iphdr *iph = (struct iphdr*)(data + offset);
     if ((void *)iph + sizeof(struct iphdr) > data_end) {
@@ -59,6 +30,42 @@ __u64 parse_ip(void *data, void *data_end, __u64 offset) {
     }
     offset += sizeof(*iph);
     // bpf_printk("%u.%u.%u.%u\n", (iph->saddr >> 24) & 0xFF, (iph->saddr >> 16) & 0xFF, (iph->saddr >> 8) & 0xFF, iph->saddr & 0xFF);
+    return offset;
+}
+
+__u64 parse_ipv6(void *data, void *data_end, __u64 offset) {
+    struct ipv6hdr *iph = (struct ipv6hdr*)(data + offset);
+    if ((void *)iph + sizeof(struct ipv6hdr) > data_end) {
+        return -1;
+    }
+    if(iph->nexthdr != IPPROTO_UDP) {
+        return -1;
+    }
+    offset += sizeof(*iph);
+    return offset;
+}
+
+__u64 parse_eth_and_ip(void *data, void *data_end) {
+    struct ethhdr *eth = (struct ethhdr*)data;
+    __u64 offset = sizeof(*eth);
+
+    if((void*)data + sizeof(struct ethhdr) > data_end) {
+        return -1;
+    }
+    __u16 ethtype = eth->h_proto;
+
+    // IPv4
+    if(ntohs(ethtype) == ETH_P_IP) {
+        offset = parse_ip(data, data_end, offset);
+        if(offset == -1) return -1;
+    }
+
+    //IPv6
+    if(ntohs(ethtype) == ETH_P_IPV6) {
+        offset = parse_ipv6(data, data_end, offset);
+        if(offset == -1) return -1;
+    }
+
     return offset;
 }
 

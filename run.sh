@@ -1,13 +1,10 @@
 sudo -v
 
-# Currently only supports IPv4
-echo "Disabling ipv6 (currently not supported)"
-sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
-
+# Flush local DNS cache
 resolvectl flush-caches
 
 go generate
 go build
 
 # Update ifname here
-sudo ./ebpfocus enp2s0
+sudo ./ebpfocus wlo1
