@@ -12,6 +12,7 @@
         "types.h": "c",
         "stdbool.h": "c",
         "net_parsers.h": "c",
-        "bpf_core_read.h": "c"
+        "bpf_core_read.h": "c",
+        "ipv6.h": "c"
     }
 }

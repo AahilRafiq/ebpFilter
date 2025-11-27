@@ -9,17 +9,6 @@
 #include <arpa/inet.h>
 #include <linux/ipv6.h>
 
-/*
- * Copied from - https://docs.huihoo.com/doxygen/linux/kernel/3.7/linux_2if__vlan_8h_source.html
- *  struct vlan_hdr - vlan header
- *  @h_vlan_TCI: priority and VLAN ID
- *  @h_vlan_encapsulated_proto: packet type ID or len
- */
-struct vlan_hdr {
-    __be16  h_vlan_TCI;
-    __be16  h_vlan_encapsulated_proto;
-};
-
 __u64 parse_ip(void *data, void *data_end, __u64 offset) {
     struct iphdr *iph = (struct iphdr*)(data + offset);
     if ((void *)iph + sizeof(struct iphdr) > data_end) {
